@@ -18,4 +18,30 @@ class Client:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.connect((self.host, self.port))
+        self.header_len = 10  # used to detect the size of the message
         print("[*] Connected to the server")
+
+    def custom_send(self, data):
+        # We must encode the message to bytes, or the receiver will not understand it
+        if isinstance(data, str):
+            data = data.encode("utf-8")
+        # Encode the length of the message (as a byte)
+        message_length = f"{len(data):<{self.header_len}}".encode("utf-8")
+        self.sock.send(message_length)
+        self.sock.send(data)
+
+    def custom_recv(self):
+        try:
+            # Receive our "header" containing message length, it's size is defined and constant
+            message_header = self.sock.recv(self.header_len)
+            if not len(message_header):
+                return False
+            # Convert header to int value
+            message_length = int(message_header.decode("utf-8").strip())
+            # Return an object of message header and message data
+            return self.sock.recv(message_length)
+        except Exception as e:
+            if DEBUG:
+                print(f"[!] ERROR {e}")
+            return False
+
