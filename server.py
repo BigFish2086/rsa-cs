@@ -111,6 +111,8 @@ class Server:
                     print(data)
                 if data == b"/key":
                     self.get_pub_key(client)
+                elif data == b"/list":
+                    self.send_clients_list(client)
                 # if data is "/quit", remove the client from the list and close the connection
                 elif data == b"/quit":
                     self.remove_client(client)
@@ -139,6 +141,42 @@ class Server:
             self.custom_send(client, "[*] Welcome to the chatroom, " + client_username.decode("utf-8").split("-")[0])
             # add the client to the list with his username
             return client_username.decode("utf-8")
+
+    def send_clients_list(self, client):
+        # check how many clients are in the list
+        if len(self.clients) == 1:
+            self.custom_send(client, "[*] There is only you in the chatroom. Wait for someone to connect")
+            return False
+        # build a pickle list of all the clients usernames
+        clients_list = [self.username(c).split("-")[0] for c in self.clients.keys() if c is not client]
+        pobj = pickle.dumps(clients_list)
+        self.custom_send(client, pobj)
+        if DEBUG:
+            print(pobj)
+        # get the client's message
+        client_choice = self.custom_recv(client)
+        if DEBUG:
+            print(client_choice)
+        if client_choice is False:
+            return False
+        client_choice = client_choice.decode("utf-8")
+        # if the client is not in the list, send him a message
+        if client_choice is not False and client_choice not in clients_list:
+            self.custom_send(client, "[!] No such client")
+            return False
+        # if the client is in the list, send him a message
+        else:
+            self.custom_send(client, f"[*] Send your next message to: {client_choice}")
+            # get the other client
+            other_client = [c for c in self.clients.keys() if self.username(c).split("-")[0] == client_choice][-1]
+            # add the other client to the list of clients that are talking
+            self.talking_clients[client] = other_client
+            # send other client public key
+            other_e = self.clients[other_client][0]
+            other_n = self.clients[other_client][1]
+            self.custom_send(client, str(other_e))
+            self.custom_send(client, str(other_n))
+            return True
 
     def remove_client(self, client):
         # save the disconnection in the logs file
