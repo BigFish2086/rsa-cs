@@ -20,6 +20,7 @@ class Client:
         self.sock.connect((self.host, self.port))
         self.header_len = 10  # used to detect the size of the message
         print("[*] Connected to the server")
+        self.send_username(username)
 
     def custom_send(self, data):
         # We must encode the message to bytes, or the receiver will not understand it
@@ -44,4 +45,26 @@ class Client:
             if DEBUG:
                 print(f"[!] ERROR {e}")
             return False
+
+    def send_username(self, username=None):
+        # 1. receive `[*] Enter a username: `
+        msg = self.custom_recv()
+        if msg is False:
+            return False
+        print(msg.decode("utf-8"))
+
+        # 2. send username
+        # TODO: check if username is valid
+        self.username = str(input()) if not username else username
+        self.username += "-" + str(time.time()).replace(".", "")
+        self.custom_send(self.username)
+
+        # 3. receive `[*] Welcome to the chatroom, {username}` or `[!] Username already taken` and exit
+        msg = self.custom_recv()
+        if msg is False:
+            return False
+        msg = msg.decode("utf-8")
+        print(msg)
+        if "Welcome" not in msg:
+            exit()
 
