@@ -21,6 +21,8 @@ class Client:
         self.header_len = 10  # used to detect the size of the message
         print("[*] Connected to the server")
         self.send_username(username)
+        self.set_keys()
+        print("[*] Sent The public key to the server")
         print("[*] Use command /quit to quit the chatroom")
 
     def custom_send(self, data):
@@ -68,6 +70,15 @@ class Client:
         print(msg)
         if "Welcome" not in msg:
             exit()
+
+
+    def set_keys(self, n=None, e=None, d=None):
+        if n is None or e is None or d is None:
+            e, d, n = keygen()
+        self.public_key = [n, e]
+        self.private_key = [n, d]
+        self.custom_send(str(n))
+        self.custom_send(str(e))
 
     def __del__(self):
         self.custom_send("/quit")
