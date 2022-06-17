@@ -19,10 +19,12 @@ class Client:
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.connect((self.host, self.port))
         self.header_len = 10  # used to detect the size of the message
+        self.other_public_key = []
         print("[*] Connected to the server")
         self.send_username(username)
         self.set_keys()
         print("[*] Sent The public key to the server")
+        print("[*] Use command /list to see the list of users")
         print("[*] Use command /quit to quit the chatroom")
 
     def custom_send(self, data):
@@ -71,6 +73,49 @@ class Client:
         if "Welcome" not in msg:
             exit()
 
+
+    def recv_list_of_users(self, other_username=None):
+        # recive list of users in a form of picled string and print them out
+        users = self.custom_recv()
+        if users is False:
+            return False
+        elif b"Wait" in users:
+            print(users.decode("utf-8"))
+            return True
+        print("[*] Send your next message to:")
+        users = pickle.loads(users)
+        for user in users:
+            print(" - " + user)
+
+        print("[*] Enter the username of the client you want to talk to: ")
+
+        # TODO: check if choice is valid
+        choice = str(input(f"{self.username} #> ")) if not other_username else other_username
+        self.custom_send(choice.encode("utf-8"))
+
+        # receive `[*] Send your next message to: {username}` or `[!] No such client` and exit
+        msg = self.custom_recv()
+        if msg is False:
+            return False
+        msg = msg.decode("utf-8")
+        print(msg)
+        if "No such client" in msg:
+            if choice in self.username:
+                print("[!] You can not talk to yourself")
+            print("[!] Try again with a valid username")
+            return False
+
+        # recive other client public key
+        other_e = self.custom_recv()
+        other_n = self.custom_recv()
+        if other_n is False or other_e is False:
+            return False
+        self.other_public_key = [other_n, other_e]
+
+        if DEBUG:
+            print(f"Other public key: \n\nn: {other_n}\n\ne: {other_e}\n\n")
+
+        return True
 
     def set_keys(self, n=None, e=None, d=None):
         if n is None or e is None or d is None:
