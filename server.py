@@ -80,8 +80,14 @@ class Server:
         # get the client's message
         while True:
             try:
-                pass
+                # receive the message from the client until he disconnects
+                data = self.custom_recv(client)
+                # if data is "/quit", remove the client from the list and close the connection
+                elif data == b"/quit":
+                    self.remove_client(client)
+                    return False
             except Exception as e:
+                self.remove_client(client)
                 if DEBUG:
                     print(e)
                 return False
@@ -104,6 +110,17 @@ class Server:
             self.custom_send(client, "[*] Welcome to the chatroom, " + client_username.decode("utf-8").split("-")[0])
             # add the client to the list with his username
             return client_username.decode("utf-8")
+
+    def remove_client(self, client):
+        # save the disconnection in the logs file
+        print("[*] Client {} has disconnected at {}".format(self.username(client), time.ctime()))
+        self.log("D {} {}\n".format(self.username(client), time.ctime()))
+        self.clients.pop(client, None)
+        self.talking_clients.pop(client, None)
+        for c1, c2 in self.talking_clients.items():
+            if c2 == client:
+                self.talking_clients[c1] = None
+        client.close()
 
     def __del__(self):
         self.sock.shutdown(socket.SHUT_RDWR)
