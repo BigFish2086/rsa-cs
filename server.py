@@ -71,7 +71,39 @@ class Server:
             return False
 
     def listen_to_client(self, client):
-        pass
+        # get the client username, for first connection
+        client_username = self.set_client_username(client)
+        if client_username is False:
+            return
+
+        self.clients[client] = [None, None, client_username]
+        # get the client's message
+        while True:
+            try:
+                pass
+            except Exception as e:
+                if DEBUG:
+                    print(e)
+                return False
+
+    def username(self, client):
+        return self.clients[client][-1]
+
+    def set_client_username(self, client):
+        self.custom_send(client, "[*] Enter a username: ")
+        client_username = self.custom_recv(client)
+        if client_username is False:
+            return False
+        # if the client is already in the list, send him a message
+        if client_username is not False and client_username in [self.username(c) for c in self.clients.keys()]:
+            self.custom_send(client, "[!] Username already taken")
+            client.close()
+            return False
+        # if the client is not in the list, send him a message
+        else:
+            self.custom_send(client, "[*] Welcome to the chatroom, " + client_username.decode("utf-8").split("-")[0])
+            # add the client to the list with his username
+            return client_username.decode("utf-8")
 
     def __del__(self):
         self.sock.shutdown(socket.SHUT_RDWR)
