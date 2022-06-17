@@ -70,18 +70,47 @@ class Server:
                 print(e)
             return False
 
+    def get_pub_key(self, client):
+        # get the client public key
+        n = self.custom_recv(client)
+        if n is False:
+            self.remove_client(client)
+            return False
+        e = self.custom_recv(client)
+        if e is False:
+            self.remove_client(client)
+            return False
+        n = n.decode("utf-8")
+        e = e.decode("utf-8")
+
+        # add that public_key to clients
+        self.clients[client][0] = e
+        self.clients[client][1] = n
+
+        # save that event in the log file
+        self.log("I {} changed key at {}\n".format(self.username(client), time.ctime()))
+        self.log("P {} {} {}\n".format(self.username(client), e, n))
+
     def listen_to_client(self, client):
         # get the client username, for first connection
         client_username = self.set_client_username(client)
         if client_username is False:
             return
 
+        # gen public key for the cur client
         self.clients[client] = [None, None, client_username]
+        self.get_pub_key(client)
+
         # get the client's message
         while True:
             try:
                 # receive the message from the client until he disconnects
                 data = self.custom_recv(client)
+                # if the client sends just "/list", send him the list of clients, if changing other client
+                if DEBUG and data is not False:
+                    print(data)
+                if data == b"/key":
+                    self.get_pub_key(client)
                 # if data is "/quit", remove the client from the list and close the connection
                 elif data == b"/quit":
                     self.remove_client(client)
