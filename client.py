@@ -21,6 +21,7 @@ class Client:
         self.header_len = 10  # used to detect the size of the message
         print("[*] Connected to the server")
         self.send_username(username)
+        print("[*] Use command /quit to quit the chatroom")
 
     def custom_send(self, data):
         # We must encode the message to bytes, or the receiver will not understand it
@@ -67,4 +68,10 @@ class Client:
         print(msg)
         if "Welcome" not in msg:
             exit()
+
+    def __del__(self):
+        self.custom_send("/quit")
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+
 
