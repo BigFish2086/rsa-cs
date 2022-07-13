@@ -60,6 +60,26 @@ class Client:
         self.custom_send(msg)
         return True
 
+    def check_enc_mail(self):
+        mail_file = f"./mails/{self.username}-mail.txt"
+        if not os.path.exists(mail_file):
+            print("[!] No mail box found")
+            return False
+        # read the first message in the mail file and decrypt it
+        msg = ""
+        with open(mail_file, "r+") as f:
+            for msg in f:
+                sender = msg[: msg.find(": ")].split("-")[0]
+                msg = msg[msg.find(": ") + 2:]
+                state, msg = decrypt2(msg, self.private_key[0], self.private_key[1])
+                if state is False:
+                    self.custom_send("/bad")
+                    tosend = f"{sender} {msg}"
+                    self.custom_send(tosend)
+                else:
+                    print(f"[*] New message from {sender}: {msg}")
+            f.truncate(0)
+
     def send_username(self, username=None):
         # 1. receive `[*] Enter a username: `
         msg = self.custom_recv()
