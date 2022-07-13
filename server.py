@@ -129,6 +129,19 @@ class Server:
                 elif data == b"/quit":
                     self.remove_client(client)
                     return False
+                # if the client is talking to someone, send him a message
+                elif data is not False:
+                    other_client = self.talking_clients[client]
+                    if other_client is not None:
+                        # write the message to a file for the other client to read it later
+                        with open(f"./mails/{self.username(other_client)}-mail.txt", "a") as f:
+                            f.write(self.username(client) + ": " + data.decode("utf-8") + "\n")
+                        # save the message in the logs file
+                        self.log(
+                            "S {} {} {}\n".format(
+                                self.username(client), self.username(other_client), data.decode("utf-8")
+                            )
+                        )
             except Exception as e:
                 self.remove_client(client)
                 if DEBUG:
