@@ -51,6 +51,15 @@ class Client:
                 print(f"[!] ERROR {e}")
             return False
 
+    def send_enc_msg(self, msg):
+        if len(self.other_public_key) == 2:
+            msg = encrypt2(msg, *self.other_public_key)
+        else:
+            print("[!] use /list command to connect to other client first")
+            return False
+        self.custom_send(msg)
+        return True
+
     def send_username(self, username=None):
         # 1. receive `[*] Enter a username: `
         msg = self.custom_recv()
