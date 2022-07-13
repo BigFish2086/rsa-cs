@@ -113,6 +113,18 @@ class Server:
                     self.get_pub_key(client)
                 elif data == b"/list":
                     self.send_clients_list(client)
+                # if data starts with "/bad", log the message within it in the logs file
+                elif data == b"/bad":
+                    # get data after "/bad "
+                    data = self.custom_recv(client)
+                    if data is False:
+                        continue
+                    data = data.decode("utf-8").split(" ")
+                    bad_data_sender = data[0]
+                    bad_dec_msg = " ".join(data[1:])
+                    tosave = f"B {bad_data_sender} {self.username(client)} {bad_dec_msg}\n"
+                    # save the message in the logs file
+                    self.log(tosave)
                 # if data is "/quit", remove the client from the list and close the connection
                 elif data == b"/quit":
                     self.remove_client(client)
