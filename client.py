@@ -162,6 +162,8 @@ class Client:
         self.sock.close()
 
 
+
+
 # an optional argumet parser to talk a json file and read from it
 # the public key and private key
 def build_parser():
@@ -193,4 +195,65 @@ def build_parser():
     return parser
 
 
+def main():
+    parser = build_parser()
+    args = parser.parse_args()
+    state, keys, bits = False, None, None
 
+    # if both flags are on
+    if args.config and args.bits:
+        print("[!] Can't have both flags on. The client would try to use the config file at first")
+        if not os.path.exists(args.config):
+            print("[!] Config file not found. Then Let's use the bits instead")
+            args.config = None
+        else:
+            args.bits = None
+
+    # just the config file in the arguments
+    if args.config:
+        # check if the file exists
+        if not os.path.exists(args.config):
+            print("[!] Config file not found")
+            exit()
+        state, keys = parse_config2(args.config)
+        if state is False or keys is None:
+            print("[!] Check the numbers in the config file")
+            exit()
+
+    # just the bits in the arguments
+    if args.bits:
+        try:
+            bits = int(args.bits)
+        except Exception as e:
+            print("[!] Check --bits should be an integer number.")
+            if DEBUG:
+                print(e)
+            exit()
+
+    # get the client ready
+    client = Client("localhost", 9998)
+    if state is True and keys is not None:
+        client.custom_send("/key")
+        client.set_keys(n=keys[0], e=keys[1], d=keys[2], bits=bits)
+
+    # the client main loop
+    while True:
+        msg = input(f"{client.username} #> ")
+        if msg:
+            if msg == "/list":
+                client.custom_send(msg)
+                client.recv_list_of_users()
+            else:
+                if client.send_enc_msg(msg) is False:
+                    continue
+        else:
+            try:
+                client.check_enc_mail()
+            except Exception as e:
+                if DEBUG:
+                    print(f"[!] ERROR {e}")
+                continue
+
+
+if __name__ == "__main__":
+    main()
