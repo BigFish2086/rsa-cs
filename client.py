@@ -8,6 +8,7 @@ import pickle
 import time
 import os
 import argparse
+import textwrap
 
 DEBUG = False
 # cgitb.enable(format="text")
@@ -72,7 +73,7 @@ class Client:
         with open(mail_file, "r+") as f:
             for msg in f:
                 sender = msg[: msg.find(": ")].split("-")[0]
-                msg = msg[msg.find(": ") + 2:]
+                msg = msg[msg.find(": ") + 2 :]
                 state, msg = decrypt2(msg, self.private_key[0], self.private_key[1])
                 if state is False:
                     self.custom_send("/bad")
@@ -103,7 +104,6 @@ class Client:
         print(msg)
         if "Welcome" not in msg:
             exit()
-
 
     def recv_list_of_users(self, other_username=None):
         # recive list of users in a form of picled string and print them out
@@ -165,7 +165,18 @@ class Client:
 # an optional argumet parser to talk a json file and read from it
 # the public key and private key
 def build_parser():
-    parser = argparse.ArgumentParser(description="Client that can send encrypted messages to the server")
+    parser = argparse.ArgumentParser(
+        description="Client that can send encrypted messages to the server",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=textwrap.dedent(
+            """\
+            Note:
+            * Either --config or --bits flag can be used, not both of them.
+            * In case of using both, the client would check if it possible
+            to use the json config file first, or the number of bits instead
+         """
+        ),
+    )
     parser.add_argument(
         "-c",
         "--config",
