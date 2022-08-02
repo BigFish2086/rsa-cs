@@ -42,6 +42,22 @@ def keygen(bits=BITS):
     return (f"{e:x}", f"{d:x}", f"{n:x}")
 
 
+def encrypt(msg, n, e):
+    n = int(n, 16)
+    e = int(e, 16)
+    msg = int(hexlify(msg.strip().encode()), 16)
+    return f"{pow(msg, e, n):x}"
+
+
+def decrypt(cipher, n, d):
+    cipher = int(cipher, 16)
+    n = int(n, 16)
+    d = int(d, 16)
+    msg = pow(cipher, d, n)
+    msg_b16 = f"{msg:x}"
+    return unhexlify(msg_b16).decode("utf-8")
+
+
 def encrypt2(msg, n, e):
     n = int(n, 16)
     e = int(e, 16)
@@ -77,10 +93,12 @@ def decrypt2(cipher, n, d):
     msg = int(msg)
     msg_b16 = f"{hex(msg)[2:]}"
     msg_b16 = msg_b16.encode()
+    try:
+        dec = unhexlify(msg_b16).decode("utf-8")
         return True, dec
     except Exception as e:
         if DEBUG:
             print(e)
         return False, tmp_msg_b16
-    try:
-        dec = unhexlify(msg_b16).decode("utf-8")
+
+
