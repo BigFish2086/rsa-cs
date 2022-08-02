@@ -26,7 +26,9 @@ def get_prime(bits):
     return next_prime(mpz_urandomb(STATE, bits) | (1 << (bits - 1)))
 
 
-def keygen(bits=BITS):
+def keygen(bits=None):
+    if bits is None:
+        bits = BITS
     p = get_prime(bits)
     q = get_prime(bits)
     if p == q:
