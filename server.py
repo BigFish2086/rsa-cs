@@ -91,6 +91,20 @@ class Server:
         self.log("I {} changed key at {}\n".format(self.username(client), time.ctime()))
         self.log("P {} {} {}\n".format(self.username(client), e, n))
 
+    def update_talking_clients(self, client):
+        # send `other` public key to `client`
+        other_e = self.clients[client][0]
+        other_n = self.clients[client][1]
+        for c1, c2 in self.talking_clients:
+            if c1 == client:
+                self.custom_send(c2, "/update")
+                self.custom_send(c2, str(other_e))
+                self.custom_send(c2, str(other_n))
+            else:
+                self.custom_send(c1, "/update")
+                self.custom_send(c1, str(other_e))
+                self.custom_send(c1, str(other_n))
+
     def listen_to_client(self, client):
         # get the client username, for first connection
         client_username = self.set_client_username(client)
