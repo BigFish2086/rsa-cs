@@ -4,6 +4,7 @@ import math
 import os
 import sys
 import random
+import unittest
 
 if sys.version_info < (3, 9):
     import gmpy2
@@ -101,4 +102,53 @@ def decrypt2(cipher, n, d):
             print(e)
         return False, tmp_msg_b16
 
+
+class TestRSAMethods(unittest.TestCase):
+    def test_decrypt1_normal_msg(self):
+        msg = "Hello, world!"
+        e, d, n = keygen()
+        encrypted = encrypt(msg, n, e)
+        decrypted = decrypt(encrypted, n, d)
+        self.assertEqual(msg, decrypted)
+
+    def test_decrypt1_msg_with_zeros(self):
+        msg = "00000aykalam00000000"
+        e, d, n = keygen()
+        encrypted = encrypt(msg, n, e)
+        decrypted = decrypt(encrypted, n, d)
+        self.assertEqual(msg, decrypted)
+
+    def test_decrypt1_msg_ending_in_space(self):
+        msg = "ahmed ahmed afklnfsd ldsf "
+        e, d, n = keygen()
+        encrypted = encrypt(msg, n, e)
+        decrypted = decrypt(encrypted, n, d)
+        self.assertEqual(msg, decrypted)
+
+    def test_decrypt2_normal_msg(self):
+        msg = "Hello, world!"
+        e, d, n = keygen()
+        encrypted = encrypt2(msg, n, e)
+        state, decrypted = decrypt2(encrypted, n, d)
+        self.assertTrue(state)
+        self.assertEqual(msg, decrypted)
+
+    def test_decrypt2_msg_with_zeros(self):
+        msg = "00000aykalam00000000"
+        e, d, n = keygen()
+        encrypted = encrypt2(msg, n, e)
+        state, decrypted = decrypt2(encrypted, n, d)
+        self.assertTrue(state)
+        self.assertEqual(msg, decrypted)
+
+    def test_decrypt2_msg_ending_in_space(self):
+        msg = "ahmed ahmed afklnfsd ldsf "
+        e, d, n = keygen()
+        encrypted = encrypt2(msg, n, e)
+        state, decrypted = decrypt2(encrypted, n, d)
+        self.assertTrue(state)
+        self.assertEqual(msg, decrypted)
+
+if __name__ == "__main__":
+    unittest.main();
 
