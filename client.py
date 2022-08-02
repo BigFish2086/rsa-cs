@@ -2,10 +2,12 @@ import socket
 
 # import cgitb
 from rsa import keygen, encrypt2, decrypt2
+from parse_config import parse_config, parse_config2
 
 import pickle
 import time
 import os
+import argparse
 
 DEBUG = False
 # cgitb.enable(format="text")
@@ -146,9 +148,9 @@ class Client:
 
         return True
 
-    def set_keys(self, n=None, e=None, d=None):
+    def set_keys(self, n=None, e=None, d=None, bits=None):
         if n is None or e is None or d is None:
-            e, d, n = keygen()
+            e, d, n = keygen(bits)
         self.public_key = [n, e]
         self.private_key = [n, d]
         self.custom_send(str(n))
@@ -158,5 +160,26 @@ class Client:
         self.custom_send("/quit")
         self.sock.shutdown(socket.SHUT_RDWR)
         self.sock.close()
+
+
+# an optional argumet parser to talk a json file and read from it
+# the public key and private key
+def build_parser():
+    parser = argparse.ArgumentParser(description="Client that can send encrypted messages to the server")
+    parser.add_argument(
+        "-c",
+        "--config",
+        help="The path to the json config file, contains the p, q, e, d",
+        type=str,
+    )
+    parser.add_argument(
+        "-b",
+        "--bits",
+        help="the number of bits for the RSA key i.e. p, q (default: 1024)",
+        type=int,
+        default="1024",
+    )
+    return parser
+
 
 
