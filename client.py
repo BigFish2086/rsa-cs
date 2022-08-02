@@ -162,8 +162,6 @@ class Client:
         self.sock.close()
 
 
-
-
 # an optional argumet parser to talk a json file and read from it
 # the public key and private key
 def build_parser():
